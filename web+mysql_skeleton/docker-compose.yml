@@ -1,0 +1,41 @@
+version: "3"
+networks:
+  exercise1_default:
+services:
+  web:
+    image: mesarpe/www_server:v1
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "${EXTERNAL_PORT_WWW}:8081"
+    depends_on:
+      - exercise1_default
+      - db
+  db:
+    image: mesarpe/mysql_server:v1
+    ports:
+      - "${EXTERNAL_PORT_DB}:3306"
+    volumes:
+      - /var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: supersecure
+      MYSQL_DATABASE: exercise1
+      MYSQL_USER: my_user
+      MYSQL_PASSWORD: my_password
+    depends_on:
+      - exercise1_default
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - "${EXTERNAL_PORT_VISUALIZER}:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
